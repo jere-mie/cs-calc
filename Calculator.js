@@ -17,6 +17,59 @@ const changeRadix = (inp)=>{
     return isNaN(parseInt(inp))? 10:parseInt(inp);
 }
 
+function convert(value, base = 2) {
+    let [integer, fraction = ''] = value.toString().split('.');
+
+    return parseInt(integer, base) + (integer[0] !== '-' || -1) * fraction
+      .split('')
+      .reduceRight((r, a) => (r + parseInt(a, base)) / base, 0);
+}
+
+function solve(exprrad, expr){
+    try{
+        let result = 0;
+        if (exprrad==10){
+          result = evaluate(expr);
+        }else{
+          result = convertExpr(expr,exprrad);
+        }
+        return String(result).substr(0,14);
+    }catch(error){
+        console.log(error)
+        return expr;
+    }
+    return expr;
+}
+
+function convertExpr(expr, base){
+    let isAlpha = (ch)=>{
+      return /^[A-Z]$/i.test(ch);
+    }
+
+    let arr = [''];
+    let arrConvert = [false];
+
+    for (let i=0; i<expr.length; i++){
+      if(!isNaN(expr[i]) || expr[i]=='.' || (isAlpha(expr[i]) && base > 10)){
+        arr[arr.length-1] = arr[arr.length-1].concat(expr[i]);
+        arrConvert[arrConvert.length-1] = true;
+      }else{
+        arr.push(expr[i]);
+        arrConvert.push(false);
+        arr.push('');
+        arrConvert.push(false);
+      }
+    }
+    for (let i=0; i<arr.length; i++){
+      if(arrConvert[i]){
+        arr[i] = convert(arr[i],base);
+      }
+    }
+    let q = arr.join('');
+    return evaluate(q).toString(base);
+}
+
+
 export default function Calculator(props){
     const [text, setText] = useState('');
     const [radix, setRadix] = useState(10);
@@ -27,7 +80,8 @@ export default function Calculator(props){
                 value={text}
                 onChangeText={setText}
                 style={styles.input}
-                onSubmitEditing={()=> {setText(evalCalc(text))}}
+                // onSubmitEditing={()=> {setText(evalCalc(text))}}
+                onSubmitEditing={()=> {setText(solve(radix, text))}}
                 />
                 <View style={{flexDirection:'row', alignItems:'center'}} >
                     <Text style={{color:'white', fontSize:22}} >Radix/Base: </Text>
@@ -79,7 +133,8 @@ export default function Calculator(props){
                     <TouchableOpacity style={styles.calcbtn} onPress={()=>{setText('')}}><Text style={[styles.btnText, {color: '#ff8080'}]} >CE</Text></TouchableOpacity>
                     <TouchableOpacity style={styles.calcbtn} onPress={()=>{setText(text+'0')}}><Text style={styles.btnText} >0</Text></TouchableOpacity>
                     <TouchableOpacity style={styles.calcbtn} onPress={()=>{setText(text+'.')}}><Text style={styles.btnText} >.</Text></TouchableOpacity>
-                    <TouchableOpacity style={[styles.calcbtn, styles.eqbtn]} onPress={()=> {setText(evalCalc(text))}}><Text style={styles.btnText} >=</Text></TouchableOpacity>
+                    <TouchableOpacity style={[styles.calcbtn, styles.eqbtn]} onPress={()=> {setText(solve(radix, text))}}><Text style={styles.btnText} >=</Text></TouchableOpacity>
+                    {/* <TouchableOpacity style={[styles.calcbtn, styles.eqbtn]} onPress={()=> {setText(evalCalc(text))}}><Text style={styles.btnText} >=</Text></TouchableOpacity> */}
                 </View>
                 <View style={{marginBottom:10}}></View>
             </View>
@@ -136,16 +191,18 @@ const styles = StyleSheet.create({
         margin:2,
         backgroundColor: '#333333',
         borderRadius: 99,
+        borderWidth: 1,
+        borderColor: '#444444',
     },
     eqbtn:{
-        backgroundColor: '#7ee600',
+        backgroundColor: '#6dc700',
     },
     btnText: {
         color: 'white',
         fontSize: 35,
     },
     opText: {
-        color: '#98ff1a',
+        color: '#6dc700',
     },
     alphText: {
         color: '#b3e6ff'

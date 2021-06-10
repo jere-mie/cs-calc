@@ -10,5 +10,6 @@ npm-debug.*
 *.orig.*
 web-build/
 playground.html
+test.js
 # macOS
 .DS_Store
